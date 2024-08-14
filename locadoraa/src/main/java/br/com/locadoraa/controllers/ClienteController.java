@@ -3,6 +3,7 @@ package br.com.locadoraa.controllers;
 import br.com.locadoraa.model.Cliente;
 import br.com.locadoraa.services.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +23,17 @@ public class ClienteController {
     }
 
     @PostMapping
-    public ResponseEntity<Cliente> create(@RequestBody Cliente cliente) {
+    public ResponseEntity<String> create(@RequestBody Cliente cliente) {
         try {
             Cliente savedCliente = clienteService.save(cliente);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedCliente);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Cliente criado com sucesso: " + savedCliente.getCpf());
+        } catch (DataIntegrityViolationException e) {
+            // Retorna um erro 409 (Conflict) quando já existe um cliente com o CPF
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         } catch (Exception e) {
             // Log the error and return a 500 status code
             e.printStackTrace(); // For debugging purposes
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao criar cliente.");
         }
     }
 
@@ -41,7 +45,7 @@ public class ClienteController {
         } catch (Exception e) {
             // Log the error and return a 500 status code
             e.printStackTrace(); // For debugging purposes
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
